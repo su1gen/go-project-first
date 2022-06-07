@@ -4,25 +4,35 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
+	"time"
 )
 
-func getPosts() {
-	response, err := http.Get("https://jsonplaceholder.typicode.com/posts")
-	if err != nil {
-		fmt.Println("wrong request")
-		return
-	}
+var posts []string
+var wg sync.WaitGroup
 
-	posts, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println("error with response")
-		return
+func getOnePost(index int) {
+	defer wg.Done()
+	url := fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%d", index+1)
+	response, _ := http.Get(url)
+	post, _ := ioutil.ReadAll(response.Body)
+	posts = append(posts, string(post))
+}
+
+func getPosts() {
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go getOnePost(i)
 	}
-	//Convert the body to type string
-	postsForPrint := string(posts)
-	fmt.Println(postsForPrint)
 }
 
 func main() {
+	start := time.Now()
+
 	getPosts()
+	wg.Wait()
+
+	programTime := time.Since(start)
+	fmt.Println(posts)
+	fmt.Println(programTime)
 }
