@@ -10,12 +10,15 @@ import (
 
 var posts []string
 var wg sync.WaitGroup
+var mut sync.Mutex
 
 func getOnePost(index int) {
 	defer wg.Done()
 	url := fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%d", index+1)
 	response, _ := http.Get(url)
 	post, _ := ioutil.ReadAll(response.Body)
+	mut.Lock()
+	defer mut.Unlock()
 	posts = append(posts, string(post))
 }
 
