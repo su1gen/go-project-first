@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -11,6 +14,17 @@ import (
 var posts []string
 var wg sync.WaitGroup
 var mut sync.Mutex
+
+func createPostFiles(postsSlice []string, path string) {
+	for index, post := range postsSlice {
+		newFile, err := os.Create(path + strconv.Itoa(index+1) + ".txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+		newFile.WriteString(post)
+		newFile.Close()
+	}
+}
 
 func getOnePost(index int) {
 	defer wg.Done()
@@ -29,13 +43,28 @@ func getPosts() {
 	}
 }
 
+func removePostFiles(path string) {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		os.Remove(path + file.Name())
+	}
+}
+
 func main() {
 	start := time.Now()
+	path := "./storage/posts/"
+
+	removePostFiles(path)
 
 	getPosts()
 	wg.Wait()
 
+	createPostFiles(posts[:5], path)
+
 	programTime := time.Since(start)
-	fmt.Println(posts)
 	fmt.Println(programTime)
 }
