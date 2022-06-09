@@ -21,8 +21,10 @@ func createPostFiles(postsSlice []string, path string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		newFile.WriteString(post)
+		//newFile.WriteString(post)
+		ioutil.WriteFile(path+strconv.Itoa(index+1)+".txt", []byte(post), 0644)
 		newFile.Close()
+
 	}
 }
 
